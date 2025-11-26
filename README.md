@@ -21,54 +21,9 @@ This submission includes:
 
 ---
 
-## 🖼 1. System Architecture Diagram (Mermaid Version)
+## 🏗 1. Architecture Explanation
 
-```mermaid
-flowchart LR
-    user([User Browser]) --> r53[Route 53 DNS]
-
-    r53 -->|app.example.com| cf[CloudFront CDN]
-    cf --> waf[AWS WAF]
-    waf --> s3[S3 Bucket<br>(Static Frontend)]
-
-    r53 -->|api.example.com| alb[Application Load Balancer]
-
-    subgraph VPC
-        subgraph Public_Subnets[Public Subnets (AZ1 & AZ2)]
-            alb
-        end
-
-        subgraph Private_App_Subnets[Private App Subnets (AZ1 & AZ2)]
-            ecs1[ECS Fargate Task<br>(API)]
-            ecs2[ECS Fargate Task<br>(API)]
-            secrets[AWS Secrets Manager<br>(DB Credentials, API Keys)]
-        end
-
-        subgraph Private_DB_Subnets[Private DB Subnets (AZ1 & AZ2)]
-            rdsPrimary[RDS PostgreSQL<br>Primary (Multi-AZ)]
-            rdsStandby[RDS Standby (AZ2)]
-            rdsReplica[RDS Read Replica]
-        end
-    end
-
-    alb --> ecs1
-    alb --> ecs2
-
-    ecs1 -->|fetch secrets| secrets
-    ecs2 -->|fetch secrets| secrets
-
-    ecs1 -->|TCP 5432| rdsPrimary
-    ecs2 -->|TCP 5432| rdsPrimary
-
-    rdsPrimary -. sync replication .-> rdsStandby
-    rdsPrimary -. async replication .-> rdsReplica
-```
-
----
-
-## 🏗 2. Architecture Explanation
-
-### 2.1 UI (Frontend)  
+### 1.1 UI (Frontend)  
 The frontend is designed as a **static SPA** (React/Angular/Vue) deployed using AWS serverless and globally distributed services.
 
 #### Hosting
@@ -89,7 +44,7 @@ User → Route 53 → CloudFront → S3
 
 ---
 
-### 2.2 API (Backend)
+### 1.2 API (Backend)
 
 #### Runtime
 - Dockerized app
@@ -114,7 +69,7 @@ Route 53 → ALB → ECS Tasks
 
 ---
 
-### 2.3 Database (RDS PostgreSQL)
+### 1.3 Database (RDS PostgreSQL)
 
 #### High Availability
 - **Multi-AZ failover**  
@@ -135,32 +90,7 @@ Route 53 → ALB → ECS Tasks
 
 ---
 
-## 🚀 3. CI/CD Pipeline (Mermaid Version)
-
-```mermaid
-flowchart LR
-    dev[Developer] --> repo[GitHub Repo]
-    repo --> gha[GitHub Actions CI/CD]
-
-    gha --> build[Build<br>- Frontend bundle<br>- Backend container<br>- Push to ECR]
-    build --> test[Test<br>- Unit tests<br>- Linting<br>- Security Scan]
-
-    test -->|merge to main| deployDev[Deploy to DEV<br>- S3 dev + CF invalidate<br>- ECS dev]
-
-    deployDev --> devTests[Automated Tests on DEV]
-    devTests --> approveStage{Manual Approval<br>for STAGE}
-
-    approveStage --> deployStage[Deploy to STAGE<br>- S3 stage + CF invalidate<br>- ECS stage]
-    deployStage --> stageTests[Smoke Tests on STAGE]
-
-    stageTests --> approveProd{Manual Approval<br>for PROD}
-
-    approveProd --> deployProd[Deploy to PROD<br>- S3 prod<br>- CF invalidate<br>- ECS update<br>- ALB health checks<br>- Rollback if fail]
-```
-
----
-
-## 🔄 4. CI/CD Workflow Explanation
+## 🔄 2. CI/CD Workflow Explanation
 
 ### Triggers
 - **PR:** build + tests  
@@ -197,7 +127,7 @@ With manual approvals.
 
 ---
 
-## ⚖ 5. How the System Handles Load
+## ⚖ 3. How the System Handles Load
 
 ### Frontend
 - CloudFront edge caching  
@@ -216,7 +146,7 @@ With manual approvals.
 
 ---
 
-## 🛡 6. High Availability & Disaster Recovery
+## 🛡 4. High Availability & Disaster Recovery
 
 | Layer | HA Mechanism |
 |-------|--------------|
